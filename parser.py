@@ -92,6 +92,8 @@ def main_parser(query):
 		query_conditions = condition_or
 		query_conditions.append('or')
 
+	query_conditions = condition_parser(query_conditions)
+
 	return query_tables,query_fields,distinct,query_conditions
 
 	print(distinct)
@@ -144,4 +146,49 @@ def find_query_tables(query_tables):
 
 	return query_tables
 	
-	
+# return 2 conditions (2 fields + operation), AND/OR
+def condition_parser(query_conditions):
+
+	for c,condition in enumerate(query_conditions[0:2]):
+
+		# make sure there's only one operation
+		if len(re.split('<=|>=|=|<|>',condition)) > 2:
+			print("ERROR : more than one operator given")
+			sys.exit()
+		
+		if len(re.split('<|=|>',condition)) < 2:
+			print("ERROR : not enough operators given")
+			sys.exit()
+		
+		# find 
+		operation = ""
+		if len(re.split('<=',condition)) == 2:
+			operation = 'less_than_equal'
+			condition = re.split('<=',condition)
+		elif len(re.split('>=',condition)) == 2:
+			operation = 'greater_than_equal'
+			condition = re.split('>=',condition)
+		elif len(re.split('=',condition)) == 2:
+			operation = 'equal'
+			condition = re.split('=',condition)
+		elif len(re.split('<',condition)) == 2:
+			operation = 'less_than'
+			condition = re.split('<',condition)
+		elif len(re.split('>',condition)) == 2:
+			operation = 'greater_than'
+			condition = re.split('>',condition)
+		
+		condition = [i for i in condition if i]
+		if len(condition) < 2:
+			print("ERROR : only one field specified for condition")
+			sys.exit()
+
+		for f,field in enumerate(condition):
+			field = [i for i in re.split(' ',field) if i]
+			if len(field) != 1:
+				print("ERROR : fields not given properly for condition")
+				sys.exit()
+			condition[f] = field[0]
+
+		query_conditions[c] = [operation,condition[0],condition[1]]
+	return query_conditions
