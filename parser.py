@@ -62,7 +62,7 @@ def main_parser(query):
 	query_tables = find_query_tables(query_tables)
 	
 	if not condition:
-		return
+		return query_tables,query_fields,distinct,query_conditions
 
 	if len(re.findall('(?i)and|or',query_conditions)) > 1:
 		print("ERROR : only one and/or allowed")
@@ -91,6 +91,9 @@ def main_parser(query):
 			return
 		query_conditions = condition_or
 		query_conditions.append('or')
+
+	else:
+		query_conditions = [query_conditions, None]
 
 	query_conditions = condition_parser(query_conditions)
 
@@ -148,15 +151,15 @@ def find_query_tables(query_tables):
 	
 # return 2 conditions (2 fields + operation), AND/OR
 def condition_parser(query_conditions):
-
-	for c,condition in enumerate(query_conditions[0:2]):
-
+	
+	for c,condition in enumerate(query_conditions[:-1]):
 		# make sure there's only one operation
 		if len(re.split('<=|>=|=|<|>',condition)) > 2:
 			print("ERROR : more than one operator given")
 			sys.exit()
 		
 		if len(re.split('<|=|>',condition)) < 2:
+			print(condition)
 			print("ERROR : not enough operators given")
 			sys.exit()
 		

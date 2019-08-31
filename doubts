@@ -1,0 +1,2 @@
+- can we ask for queries like 'select a,a from table1'
+	like, are we allowed to select same column from same table twice
