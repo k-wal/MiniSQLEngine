@@ -34,6 +34,41 @@ def is_int(s):
 		return False
 
 
+def is_aggregate(s,table_dict):
+	func = ""
+	field = ""
+	table = ""
+	if len(re.findall('max\(.*\)',s)) == 1:
+		func = 'max'
+		field = s[4:-1]
+	elif len(re.findall('min\(.*\)',s)) == 1:
+		func = 'min'
+		field = s[4:-1]
+	elif len(re.findall('sum\(.*\)',s)) == 1:
+		func = 'sum'
+		field = s[4:-1]
+	elif len(re.findall('average\(.*\)',s)) == 1:
+		func = 'avg'
+		field = s[8:-1]
+	elif len(re.findall('avg\(.*\)',s)) == 1:
+		func = 'avg'
+		field = s[4:-1]
+	
+
+	if field == "":
+		return False,"","",""	
+	
+	if re.split('.',field) == 2:
+		table = re.split('.',field)[0]
+		for index,attribute in enumerate(table_dict[table]):
+			if attribute == re.split('.',field)[1]:
+				return func,field,table,index
+
+	for table_name,attributes in table_dict.items():
+		for index,attribute in enumerate(attributes):
+			if attribute == field:
+				return func,field,table_name,index
+
 # return a dicitonary with fields in query as keys, and their table_name and occurence index in table correspondingly
 def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 
@@ -54,7 +89,7 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 				field_name = table + '.' + attribute
 				query_fields_original.append(field_name)
 				query_fields_table[field_name] = {'table_name':table , 'index':index}
-		return query_fields_original,query_fields_table
+		return query_fields_original,query_fields_table,table_dict
 	
 
 	# return_fields : new set of fields to display
@@ -144,17 +179,27 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 						query_fields_table[full_field] = {'table_name' : table_name, 'index' : index, 'column_name' : field}
 		
 		if not is_found:
-			if not is_int(field_name):
+
+			func,field_agg,table_agg,index_agg = is_aggregate(field_name,table_dict)
+			if func is not False:
+				l = len(table_dict[table_agg])
+				table_dict[table_agg].append(field)
+				full_field = func + '(' + table_agg+'.'+field_agg+')'
+				query_fields_table[full_field] = {'table_name':table_agg,'index':l,'column_name':full_field,'agg_func':func,'field':field_agg} 
+				return_fields.append(full_field)
+
+			elif not is_int(field_name):
 				print("ERROR : column ",field_name," doesn't exist")
 				sys.exit()
-			new_table_name = 'xxx'
-			full_field = new_table_name + '.' + field
-			if new_table_name not in table_dict.keys():
-				table_dict[new_table_name] = [field_name]
+			# if integer value, add to a new table full of constants
 			else:
-				table_dict[new_table_name].append(field_name)
-			i = len(table_dict['xxx'])-1
-			query_fields_table[full_field]  = {'table_name':new_table_name,'index' : i, 'column_name' : full_field}
-			
-
+				new_table_name = 'xxx'
+				full_field = new_table_name + '.' + field
+				if new_table_name not in table_dict.keys():
+					table_dict[new_table_name] = [field_name]
+				else:
+					table_dict[new_table_name].append(field_name)
+				i = len(table_dict['xxx'])-1
+				query_fields_table[full_field]  = {'table_name':new_table_name,'index' : i, 'column_name' : full_field,'field':field_agg}
+				
 	return return_fields,query_fields_table,table_dict

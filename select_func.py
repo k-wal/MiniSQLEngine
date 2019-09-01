@@ -22,10 +22,8 @@ def create_joined_table(query_tables,query_table_fields,tables_data):
 		# for each row in table, append the required indices
 		for row in tables_data[table]:
 			add_row = []
-			for i,field in enumerate(row):
-				if i in indices:
-					add_row.append(field)
-			
+			for i in indices:
+				add_row.append(row[i])
 			selected.append(add_row)
 			
 		if big_table == []:
@@ -43,7 +41,7 @@ def create_joined_table(query_tables,query_table_fields,tables_data):
 # select based on conditions
 def apply_conditions(cols,table,query_conditions,distinct):
 	if query_conditions == []:
-		return table
+		return get_distinct(table,distinct)
 	conditions = []
 	# if 1 condition : add 1, if 2:add both
 	if len(query_conditions) == 2:
@@ -84,18 +82,21 @@ def apply_conditions(cols,table,query_conditions,distinct):
 			results = [row[:-2] for row in table if row[-1:][0] and row[-2:-1][0]]
 		else:
 			results = [row[:-2] for row in table if row[-1:][0] or row[-2:-1][0]]
-			
+	return get_distinct(results,distinct)	
+
+
+def get_distinct(table,distinct):
 	if not distinct:
-		return results
+		return table
 	
 	final = []
-	for row in results:
+	for row in table:
 		if row not in final:
 			final.append(row)
 
 	return final
 
-
+# display results in a pretty way
 def display_result(cols,results):
 	for col in cols:
 		print(col,end = ' \t\t')
@@ -107,7 +108,7 @@ def display_result(cols,results):
 			print(col,end = ' \t\t')
 		print("\n")
 
-
+# select columns to display finally
 def select_to_display(query_fields,big_cols,table):
 	indices = []
 	for i,col in enumerate(big_cols):
@@ -120,3 +121,30 @@ def select_to_display(query_fields,big_cols,table):
 			r.append(row[index])
 		result.append(r)
 	return result 	
+
+def get_aggregate(field,table,func,query_tables,table_dict,tables_data):
+	for index,attribute in enumerate(table_dict[table]):
+		if field == attribute:
+			break
+	sum_value = 0
+	max_value = tables_data[table][0][index]
+	min_value = tables_data[table][0][index]
+	length = len(tables_data[table])
+
+	for row in tables_data[table]:
+		val = row[index]
+		if val<min_value:
+			min_value = val
+		if val>max_value:
+			max_value = val
+		sum_value += val
+
+	if func == 'sum':
+		return sum_value
+	if func == 'max':
+		return max_value
+	if func == 'min':
+		return min_value
+	if func == 'average' or func == 'avg':
+		return sum_value/length
+
