@@ -1,2 +1,5 @@
-- can we ask for queries like 'select a,a from table1'
-	like, are we allowed to select same column from same table twice
+TO DO (things i've left out, basically):
+
+- including numbers in queries while parsing : queries like 'select * from table where x>10' will give an error because 10 isn't recognized
+
+- including aggregates in queries(even while parsing) : max(a) would give an error

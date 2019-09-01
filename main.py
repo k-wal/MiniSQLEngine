@@ -1,116 +1,67 @@
 import re
 import sys 
 import parser
-
-def get_table_attributes():
-	meta_file = open('files/metadata.txt',"r")
-	line = meta_file.readline().rstrip()
-	cur_table = ""
-	table_dict = {}
-
-	while line != "":
-		# go through each table
-		if line == '<begin_table>':
-			line = meta_file.readline().rstrip()
-			cur_table = line
-			table_dict[cur_table] = []
-			line = meta_file.readline().rstrip()
-		
-			while line != '<end_table>':
-				table_dict[cur_table].append(line)
-				line = meta_file.readline().rstrip()
-	
-		line = meta_file.readline().rstrip()
-			
-	return table_dict
-
-
-
-
-def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
-
-	query_fields_table = {}
-
-	# if * is present, make sure its the only field specified
-	if '*' in query_fields:
-		if len(query_fields) >1:
-			print("ERROR : *,_ is not allowed")
-			sys.exit()
-		query_fields = []
-		for table in query_tables:
-			if table not in table_dict.keys():
-				print("ERROR : table ",table," not in database")
-				sys.exit()		
-			attributes = table_dict[table]
-			for index,attribute in enumerate(attributes):
-				field_name = table + '.' + attribute
-				query_fields_table[field_name] = {'table_name':field_name , 'index':index}
-		return query_fields_table
-	
-
-	for condition in query_conditions[:-1]:
-		query_fields += condition[1:3]
-
-
-	# splitting if table name is attached to column name
-	for field in query_fields:
-		field_name = field
-		field = re.split('\.',field)
-		if len(field) > 2:
-			print("ERROR : '.' not used properly in fields")
-			sys.exit()
-		
-		# if no table is specified
-		if len(field) == 1:
-			field = field[0]
-			for table in query_tables:
-				if table not in table_dict.keys():
-					print("ERROR : table "+table+" not in database")
-					sys.exit()
-				attributes = table_dict[table]
-				for index,attribute in enumerate(attributes):
-					if attribute == field:
-						if field in query_fields_table.keys():
-							old = query_fields_table[field]
-							if old['table_name'] != table:
-								print("ERROR : columns with same name ",field," present")
-								sys.exit()
-						query_fields_table[field] = {'table_name' : table,'index' : index}
-
-		# if table is specified
-		elif len(field) == 2:
-			full_field = field[0]+'.'+field[1]
-			table_name = field[0]
-			field = field[1]
-			# if table doesn't exist
-			if table_name not in table_dict.keys():
-				print("ERROR : no table ",table_name," present")
-				sys.exit()
-			# if table name isn't given in the query after FROM
-			if table_name not in query_tables:
-				print("ERROR : no table ",table_name," given in query")
-				sys.exit()
-			
-			attributes = table_dict[table_name]
-			# go through the table, find the attribute
-			for index,attribute in enumerate(attributes):
-				if attribute == field:
-					# if attribute asked for twice in the query, 
-					if full_field not in query_fields_table.keys():
-						query_fields_table[full_field] = {'table_name' : table_name, 'index' : index}
-		
-		if field_name not in query_fields_table.keys():
-			print("ERROR : column ",field_name," doesn't exist")
-			sys.exit()
-	return query_fields_table
-
-
+import table_func
+import csv
+import select_func
 
 query = sys.argv[1]
 
-print(parser.main_parser(query))
 query_tables,query_fields,query_distinct,query_conditions = parser.main_parser(query)
-table_dict = get_table_attributes()
-print(table_dict)
-located_fields = locate_query_fields(query_fields,query_tables,query_conditions,table_dict)
-print(located_fields)
+table_dict = table_func.get_table_attributes()
+
+# where each field is located : table_name and index
+query_fields,located_fields = table_func.locate_query_fields(query_fields,query_tables,query_conditions,table_dict)
+print(query_conditions)
+#print(located_fields)
+
+# loading all tables
+tables_data = {}
+for table_name in query_tables:
+	file_name = 'files/' + table_name + '.csv'
+	f = open(file_name,"r")
+	data = csv.reader(f)
+	table = []
+	for row in data:
+		# removing all quotes
+		for i,col in enumerate(row):
+			col = col.replace('"','')
+			col = col.replace("'","")
+			row[i] = int(col)
+		table.append(row)
+
+	tables_data[table_name] = table
+
+#print(tables_data)
+
+
+# has an array of columns required of all tables, along with indices of occurence
+query_table_fields = {}
+
+for field,info in located_fields.items():
+	table_name = info['table_name']
+	index = info['index']
+	if table_name not in query_table_fields.keys():
+		query_table_fields[table_name] = [{'column_name':field,'index':index}]
+
+	else:
+		query_table_fields[table_name].append({'column_name':field,'index':index})
+
+#print(query_table_fields)
+
+for i,condition in enumerate(query_conditions[:-1]):
+	for j,field in enumerate(condition[1:3]):
+		if len(re.split('.',field)) == 2:
+			continue
+		for table in query_tables:
+			if field in table_dict[table]:
+				query_conditions[i][j+1] = table + '.' + field	
+
+
+
+big_cols,big_table = select_func.create_joined_table(query_tables,query_table_fields,tables_data)
+select_func.display_result(big_cols,big_table)
+
+
+filtered_table = select_func.apply_conditions(big_cols,big_table,query_conditions)
+select_func.display_result(big_cols,filtered_table)
