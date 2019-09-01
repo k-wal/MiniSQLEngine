@@ -63,5 +63,10 @@ big_cols,big_table = select_func.create_joined_table(query_tables,query_table_fi
 select_func.display_result(big_cols,big_table)
 
 
-filtered_table = select_func.apply_conditions(big_cols,big_table,query_conditions)
+filtered_table = select_func.apply_conditions(big_cols,big_table,query_conditions,query_distinct)
 select_func.display_result(big_cols,filtered_table)
+
+
+
+selected_table = select_func.select_to_display(query_fields,big_cols,filtered_table)
+select_func.display_result(query_fields,selected_table)
