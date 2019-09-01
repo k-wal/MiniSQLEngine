@@ -61,7 +61,6 @@ for field,info in located_fields.items():
 	for i,row in enumerate(tables_data[table_name]):
 		tables_data[table_name][i].append(agg_value)
 
-
 for i,condition in enumerate(query_conditions[:-1]):
 	for j,field in enumerate(condition[1:3]):
 		

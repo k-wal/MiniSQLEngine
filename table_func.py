@@ -58,6 +58,9 @@ def is_aggregate(s,table_dict):
 	if field == "":
 		return False,"","",""	
 	
+	if func == "":
+		print("ERROR : aggregate function not recognized")
+		sys.exit()
 	if re.split('.',field) == 2:
 		table = re.split('.',field)[0]
 		for index,attribute in enumerate(table_dict[table]):
@@ -69,11 +72,17 @@ def is_aggregate(s,table_dict):
 			if attribute == field:
 				return func,field,table_name,index
 
+	print("ERROR : field ",field," not recognized")
+	sys.exit()
+
+
 # return a dicitonary with fields in query as keys, and their table_name and occurence index in table correspondingly
 def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 
 	query_fields_table = {}
-
+	# return_fields : new set of fields to display
+	return_fields = []
+	
 	# if * is present, make sure its the only field specified
 	if '*' in query_fields:
 		if len(query_fields) >1:
@@ -88,12 +97,9 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 			for index,attribute in enumerate(attributes):
 				field_name = table + '.' + attribute
 				query_fields_original.append(field_name)
-				query_fields_table[field_name] = {'table_name':table , 'index':index}
-		return query_fields_original,query_fields_table,table_dict
-	
+				query_fields_table[field_name] = {'table_name':table , 'index':index, 'column_name':field_name}
+				return_fields.append(field_name)
 
-	# return_fields : new set of fields to display
-	return_fields = []
 	
 	# count of fields to display : to make sure fields in condition aren't added to return_fields
 	count_query_fields_original = len(query_fields)
@@ -109,6 +115,8 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 	
 	# splitting if table name is attached to column name
 	for field_index,field in enumerate(query_fields):
+		if field == '*':
+			continue
 		if field_index == initial_count_fields:
 			break
 		is_found = False
@@ -201,5 +209,4 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 					table_dict[new_table_name].append(field_name)
 				i = len(table_dict['xxx'])-1
 				query_fields_table[full_field]  = {'table_name':new_table_name,'index' : i, 'column_name' : full_field,'field':field_agg}
-				
 	return return_fields,query_fields_table,table_dict
