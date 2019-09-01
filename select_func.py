@@ -54,7 +54,6 @@ def apply_conditions(cols,table,query_conditions,distinct):
 	for cond in conditions:
 		op1,op2 = cond[1],cond[2]
 		operation = cond[0]
-
 		# finding indices of operands involved
 		for i,col in enumerate(cols):
 			if col==op1:

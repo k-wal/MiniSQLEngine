@@ -26,6 +26,13 @@ def get_table_attributes():
 	return table_dict
 
 
+def is_int(s):
+	try:
+		int(s)
+		return True
+	except:
+		return False
+
 
 # return a dicitonary with fields in query as keys, and their table_name and occurence index in table correspondingly
 def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
@@ -137,7 +144,17 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 						query_fields_table[full_field] = {'table_name' : table_name, 'index' : index, 'column_name' : field}
 		
 		if not is_found:
-			print("ERROR : column ",field_name," doesn't exist")
-			sys.exit()
+			if not is_int(field_name):
+				print("ERROR : column ",field_name," doesn't exist")
+				sys.exit()
+			new_table_name = 'xxx'
+			full_field = new_table_name + '.' + field
+			if new_table_name not in table_dict.keys():
+				table_dict[new_table_name] = [field_name]
+			else:
+				table_dict[new_table_name].append(field_name)
+			i = len(table_dict['xxx'])-1
+			query_fields_table[full_field]  = {'table_name':new_table_name,'index' : i, 'column_name' : full_field}
+			
 
-	return return_fields,query_fields_table
+	return return_fields,query_fields_table,table_dict

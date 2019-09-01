@@ -11,8 +11,8 @@ query_tables,query_fields,query_distinct,query_conditions = parser.main_parser(q
 table_dict = table_func.get_table_attributes()
 
 # where each field is located : table_name and index
-query_fields,located_fields = table_func.locate_query_fields(query_fields,query_tables,query_conditions,table_dict)
-print(query_conditions)
+query_fields,located_fields,table_dict = table_func.locate_query_fields(query_fields,query_tables,query_conditions,table_dict)
+#print(query_conditions)
 #print(located_fields)
 
 # loading all tables
@@ -32,8 +32,16 @@ for table_name in query_tables:
 
 	tables_data[table_name] = table
 
-#print(tables_data)
+for table_name,attributes in table_dict.items():
+	if table_name == 'xxx':
+		for field in attributes:
+			field = int(field)
+			if table_name not in tables_data.keys():
+				tables_data[table_name] = [[field]]
+			else:
+				tables_data[table_name][0].append(field)
 
+query_tables.append('xxx')
 
 # has an array of columns required of all tables, along with indices of occurence
 query_table_fields = {}
@@ -47,24 +55,22 @@ for field,info in located_fields.items():
 	else:
 		query_table_fields[table_name].append({'column_name':field,'index':index})
 
-#print(query_table_fields)
-
 for i,condition in enumerate(query_conditions[:-1]):
 	for j,field in enumerate(condition[1:3]):
-		if len(re.split('.',field)) == 2:
+		
+		if len(re.split('\.',field)) == 2:
 			continue
 		for table in query_tables:
 			if field in table_dict[table]:
-				query_conditions[i][j+1] = table + '.' + field	
-
+				query_conditions[i][j+1] = table + '.' + field
 
 
 big_cols,big_table = select_func.create_joined_table(query_tables,query_table_fields,tables_data)
-select_func.display_result(big_cols,big_table)
+#select_func.display_result(big_cols,big_table)
 
 
 filtered_table = select_func.apply_conditions(big_cols,big_table,query_conditions,query_distinct)
-select_func.display_result(big_cols,filtered_table)
+#select_func.display_result(big_cols,filtered_table)
 
 
 
