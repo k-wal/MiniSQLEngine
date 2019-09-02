@@ -84,5 +84,5 @@ filtered_table = select_func.apply_conditions(big_cols,big_table,query_condition
 #select_func.display_result(big_cols,filtered_table)
 
 
-selected_table = select_func.select_to_display(query_fields,big_cols,filtered_table)
+selected_table,query_fields = select_func.select_to_display(query_fields,big_cols,filtered_table)
 select_func.display_result(query_fields,selected_table)

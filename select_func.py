@@ -1,5 +1,5 @@
 import itertools
-
+import re
 
 def create_joined_table(query_tables,query_table_fields,tables_data):
 
@@ -111,16 +111,27 @@ def display_result(cols,results):
 # select columns to display finally
 def select_to_display(query_fields,big_cols,table):
 	indices = []
-	for i,col in enumerate(big_cols):
-		if col in query_fields:
-			indices.append(i)
+
+	cols = []
+
+	for field in query_fields:
+		for i,col in enumerate(big_cols):
+			if field == col:
+				indices.append(i)
+
 	result = []
 	for row in table:
 		r = []
 		for index in indices:
 			r.append(row[index])
 		result.append(r)
-	return result 	
+
+	if len(query_fields)>1 and len(re.findall('\(',query_fields[0]))==0:
+		return result,query_fields
+	
+	result = [[result[0][0]]]
+	return result,query_fields
+	
 
 # return aggregate
 def get_aggregate(field,table,func,query_tables,table_dict,tables_data):

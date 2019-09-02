@@ -38,6 +38,7 @@ def is_aggregate(s,table_dict,query_tables):
 	func = ""
 	field = ""
 	table = ""
+	is_found = False
 	if len(re.findall('max\(.*\)',s)) == 1:
 		func = 'max'
 		field = s[4:-1]
@@ -61,23 +62,30 @@ def is_aggregate(s,table_dict,query_tables):
 	if func == "":
 		print("ERROR : aggregate function not recognized")
 		sys.exit()
-	if re.split('.',field) == 2:
-		table = re.split('.',field)[0]
+	
+	if len(re.split('\.',field)) == 2:
+		table = re.split('\.',field)[0]
 		if table not in query_tables:
 			print("ERROR : table ",table," not specified in query")
 			sys.exit()
 		for index,attribute in enumerate(table_dict[table]):
-			if attribute == re.split('.',field)[1]:
-				return func,field,table,index
+			if attribute == re.split('\.',field)[1]:
+				return func,re.split('\.',field)[1],table,index
 
+	save_index = ""
 	for table_name,attributes in table_dict.items():
 		for index,attribute in enumerate(attributes):
 			if attribute == field:
-				if table_name not in query_tables:
-					print("ERROR : table ",table_name," not specified in query")
+				if table_name  in query_tables and not is_found:
+					is_found = True
+					table = table_name
+					save_index = index
+				elif table_name in query_tables and is_found:
+					print("ERROR : multiple tables with field ",field)
 					sys.exit()
-				return func,field,table_name,index
-
+				
+	return func,field,table,index
+		
 	print("ERROR : field ",field," not recognized")
 	sys.exit()
 
@@ -166,7 +174,7 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 							query_fields_table[full_field] = {'table_name' : table,'index' : index,'column_name':field}
 					
 		# if table is specified
-		elif len(field) == 2:
+		elif len(field) == 2 and len(re.findall('\(',field[0]))==0:
 			full_field = field[0]+'.'+field[1]
 			table_name = field[0]
 			field = field[1]
