@@ -126,7 +126,7 @@ def select_to_display(query_fields,big_cols,table):
 			r.append(row[index])
 		result.append(r)
 
-	if len(query_fields)>1 and len(re.findall('\(',query_fields[0]))==0:
+	if len(query_fields)>1 or len(re.findall('\(',query_fields[0]))==0:
 		return result,query_fields
 	
 	result = [[result[0][0]]]

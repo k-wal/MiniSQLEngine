@@ -107,13 +107,13 @@ def find_query_fields(query_fields):
 	distinct = False
 
 	# checking for distinct
-	first_field = query_fields[0].lower()
+	first_field = query_fields[0]
 	first_field = [i for i in re.split(' ',first_field) if i]
 	if len(first_field) == 0:
 		print("ERROR : spare ',' before first field")
 		sys.exit()
 	
-	if first_field[0] == 'distinct':
+	if first_field[0].lower() == 'distinct':
 		if len(first_field) != 2:
 			print("ERROR : fields not specified properly after 'distinct'")
 			sys.exit()
