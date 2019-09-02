@@ -189,16 +189,20 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 		if not is_found:
 
 			func,field_agg,table_agg,index_agg = is_aggregate(field_name,table_dict)
+			# if aggregate_function :
 			if func is not False:
 				l = len(table_dict[table_agg])
+				# add a field to table in table_dict
 				table_dict[table_agg].append(field)
 				full_field = func + '(' + table_agg+'.'+field_agg+')'
+		
 				query_fields_table[full_field] = {'table_name':table_agg,'index':l,'column_name':full_field,'agg_func':func,'field':field_agg} 
 				return_fields.append(full_field)
-
+			# if not aggregate function and not integer and not present, throw error
 			elif not is_int(field_name):
 				print("ERROR : column ",field_name," doesn't exist")
 				sys.exit()
+			
 			# if integer value, add to a new table full of constants
 			else:
 				new_table_name = 'xxx'

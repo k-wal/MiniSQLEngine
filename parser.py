@@ -99,10 +99,6 @@ def main_parser(query):
 
 	return query_tables,query_fields,distinct,query_conditions
 
-	print(distinct)
-	print(query_conditions)
-	print(query_tables)
-	print(query_fields)
 
 
 # return array of query fields

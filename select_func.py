@@ -84,7 +84,7 @@ def apply_conditions(cols,table,query_conditions,distinct):
 			results = [row[:-2] for row in table if row[-1:][0] or row[-2:-1][0]]
 	return get_distinct(results,distinct)	
 
-
+# if distinct = True, return table with distinct rows
 def get_distinct(table,distinct):
 	if not distinct:
 		return table
@@ -122,7 +122,9 @@ def select_to_display(query_fields,big_cols,table):
 		result.append(r)
 	return result 	
 
+# return aggregate
 def get_aggregate(field,table,func,query_tables,table_dict,tables_data):
+	# get index of attribute to aggregate
 	for index,attribute in enumerate(table_dict[table]):
 		if field == attribute:
 			break
@@ -131,6 +133,7 @@ def get_aggregate(field,table,func,query_tables,table_dict,tables_data):
 	min_value = tables_data[table][0][index]
 	length = len(tables_data[table])
 
+	# go through each row, calculate all aggregates for attribute with index 'index'
 	for row in tables_data[table]:
 		val = row[index]
 		if val<min_value:
