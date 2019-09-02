@@ -5,7 +5,12 @@ import table_func
 import csv
 import select_func
 
+if len(sys.argv) != 2:
+	print("ERROR : number of arguments should be 1")
+	sys.exit()
+
 query = sys.argv[1]
+
 
 query_tables,query_fields,query_distinct,query_conditions = parser.main_parser(query)
 table_dict = table_func.get_table_attributes()

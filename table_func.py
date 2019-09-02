@@ -34,7 +34,7 @@ def is_int(s):
 		return False
 
 
-def is_aggregate(s,table_dict):
+def is_aggregate(s,table_dict,query_tables):
 	func = ""
 	field = ""
 	table = ""
@@ -63,6 +63,9 @@ def is_aggregate(s,table_dict):
 		sys.exit()
 	if re.split('.',field) == 2:
 		table = re.split('.',field)[0]
+		if table not in query_tables:
+			print("ERROR : table ",table," not specified in query")
+			sys.exit()
 		for index,attribute in enumerate(table_dict[table]):
 			if attribute == re.split('.',field)[1]:
 				return func,field,table,index
@@ -70,6 +73,9 @@ def is_aggregate(s,table_dict):
 	for table_name,attributes in table_dict.items():
 		for index,attribute in enumerate(attributes):
 			if attribute == field:
+				if table_name not in query_tables:
+					print("ERROR : table ",table_name," not specified in query")
+					sys.exit()
 				return func,field,table_name,index
 
 	print("ERROR : field ",field," not recognized")
@@ -188,7 +194,7 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 		
 		if not is_found:
 
-			func,field_agg,table_agg,index_agg = is_aggregate(field_name,table_dict)
+			func,field_agg,table_agg,index_agg = is_aggregate(field_name,table_dict,query_tables)
 			# if aggregate_function :
 			if func is not False:
 				l = len(table_dict[table_agg])
