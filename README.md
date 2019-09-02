@@ -2,7 +2,7 @@
 
 A SQL engine to query existing tables.
 
-###Features
+### Features
 
 + `SELECT` queries : basic select queries, including of the type `select * from table`
 + `WHERE` conditions : only comparisons like <,>,<=,>=,= allowed(within fields and integers), maximum 1 `and`/`or` allowed, maximum 2 conditions in one query allowed.
@@ -11,7 +11,7 @@ A SQL engine to query existing tables.
 
 <br/>
 
-###Additional Features
+### Additional Features
 
 + Error Handling : for scenarios where tables, fields given in query don't exist or where there's a mistake in syntax
 + Case Sensitivity : as in the case of MySQL, keywords like `select`, `distinct`, `from` and `where` are case insensitive and column and table names are case sensitive. 
