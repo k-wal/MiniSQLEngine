@@ -84,7 +84,7 @@ def is_aggregate(s,table_dict,query_tables):
 					print("ERROR : multiple tables with field ",field)
 					sys.exit()
 				
-	return func,field,table,index
+	return func,field,table,save_index
 		
 	print("ERROR : field ",field," not recognized")
 	sys.exit()
@@ -156,12 +156,12 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 						if not is_found:
 							is_found =  True
 							query_fields[field_index] = full_field
-							if field_index <= count_query_fields_original and full_field not in return_fields:
+							if field_index < count_query_fields_original and full_field not in return_fields:
 								return_fields.append(full_field)
 								
 						else:
 							query_fields.append(full_field)
-							if field_index <= count_query_fields_original and full_field not in return_fields:
+							if field_index < count_query_fields_original and full_field not in return_fields:
 									return_fields.append(full_field)
 						
 						# making sure that current field occurs only once
@@ -210,7 +210,7 @@ def locate_query_fields(query_fields,query_tables,query_conditions,table_dict):
 				table_dict[table_agg].append(field)
 				full_field = func + '(' + table_agg+'.'+field_agg+')'
 		
-				query_fields_table[full_field] = {'table_name':table_agg,'index':l,'column_name':full_field,'agg_func':func,'field':field_agg} 
+				query_fields_table[full_field] = {'table_name':table_agg,'index':l,'column_name':full_field,'agg_func':func,'field':field_agg,'field_index':index_agg} 
 				return_fields.append(full_field)
 			# if not aggregate function and not integer and not present, throw error
 			elif not is_int(field_name):

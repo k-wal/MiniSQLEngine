@@ -109,7 +109,7 @@ def display_result(cols,results):
 		print("\n")
 
 # select columns to display finally
-def select_to_display(query_fields,big_cols,table):
+def select_to_display(query_fields,big_cols,table,agg_fields):
 	indices = []
 
 	cols = []
@@ -126,11 +126,11 @@ def select_to_display(query_fields,big_cols,table):
 			r.append(row[index])
 		result.append(r)
 
-	if len(query_fields)>1 or len(re.findall('\(',query_fields[0]))==0:
+	# if first field is aggregate, print only that field
+	if len(agg_fields)==0:
 		return result,query_fields
 	
-	result = [[result[0][0]]]
-	return result,query_fields
+	return [[result[0][0]]],[query_fields[0]]
 	
 
 # return aggregate
@@ -162,3 +162,98 @@ def get_aggregate(field,table,func,query_tables,table_dict,tables_data):
 	if func == 'average' or func == 'avg':
 		return sum_value/length
 
+'''
+def recalculate_aggregate(table,field_names,located_fields):
+	agg_indices = []
+	agg_fields = []
+	agg_funcs = []
+	fields_indices = []
+	fields = []
+	result = []
+	# finding indices where aggregate field occurs
+	for i,field in enumerate(field_names):
+		print(field)
+		if len(re.findall('\(',field)) == 0:
+			continue
+		agg_indices.append(i)
+		agg_fields.append(field)
+	print(agg_indices)
+	if len(agg_indices) == 0:
+		return field_names,table
+	
+	for index in agg_indices:
+		for field,info in located_fields.items():
+			if field != field_names[index]:
+				continue
+			column_name = info['table_name'] + '.' + info['field']
+			func = info['agg_func']
+			for i,result_field in enumerate(field_names):
+				if result_field != column_name:
+					continue
+				fields.append(column_name)
+				fields_indices.append(i)
+				agg_funcs.append(func)
+
+	result_fields = []
+	for i in agg_indices:
+		result_fields.append(field_names[i])
+		func = agg_funcs[i]
+		index = fields_indices[i]
+		sum_value = 0
+		min_value = table[0][index]
+		max_value = table[0][index]
+		for row in table:
+			val = row[index]
+			if val<min_value:
+				min_value = val
+			if val>max_value:
+				max_value = val
+			sum_value += val
+		if func == 'max':
+			agg_value = max_value	
+		if func == 'min':
+			agg_value = min_value	
+		if func == 'sum':
+			agg_value = sum_value	
+		if func == 'avg':
+			agg_value = sum_value / len(table)
+		result.append([agg_value])
+	return agg_fields,result	
+'''
+
+def cal_aggregate(fields,table,agg_fields):
+	if len(agg_fields) == 0:
+		return fields,table
+
+	for agg_field,info in agg_fields.items():
+		column_name = info['table_name'] + '.' + info['field']
+		for index,field in enumerate(fields):
+			if column_name == field:
+				break
+		func = info['agg_func']
+		
+		sum_value = 0
+		min_value = table[0][index]
+		max_value = table[0][index]
+		for row in table:
+			val = row[index]
+			if val<min_value:
+				min_value = val
+			if val>max_value:
+				max_value = val
+			sum_value += val
+		if func == 'max':
+			agg_value = max_value	
+		if func == 'min':
+			agg_value = min_value	
+		if func == 'sum':
+			agg_value = sum_value	
+		if func == 'avg':
+			agg_value = sum_value / len(table)
+		
+		for field_index,field in enumerate(fields):
+			if field != agg_field:
+				continue
+			for i,row in enumerate(table):
+				table[i][field_index] = agg_value
+	return fields,table
