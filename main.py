@@ -83,10 +83,25 @@ for i,condition in enumerate(query_conditions[:-1]):
 	for j,field in enumerate(condition[1:3]):
 		
 		if len(re.split('\.',field)) == 2:
+			table_name = re.split('\.',field)[0]
+			if table_name not in query_tables:
+				print("ERROR : table ",table_name," not in query")
+				sys.exit()
 			continue
+		is_present = False
 		for table in query_tables:
 			if field in table_dict[table]:
+				if is_present == True:
+					print("ERROR : field found in multiple tables")
+					sys.exit()
 				query_conditions[i][j+1] = table + '.' + field
+				is_present = True
+		if not is_present:
+			print("ERROR : field not found in tables")
+			sys.exit()
+
+	
+joining_fields = select_func.get_joining_fields(query_conditions)
 
 
 big_cols,big_table = select_func.create_joined_table(query_tables,query_table_fields,tables_data)
@@ -99,4 +114,7 @@ big_cols,filtered_table = select_func.cal_aggregate(big_cols,filtered_table,aggr
 #select_func.display_result(big_cols,filtered_table)
 
 selected_table,query_fields = select_func.select_to_display(query_fields,big_cols,filtered_table,aggregate_fields)
+
+selected_table,query_fields = select_func.remove_joining_fields(query_fields,selected_table,joining_fields)
+
 select_func.display_result(query_fields,selected_table)

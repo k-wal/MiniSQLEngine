@@ -1,5 +1,6 @@
 import itertools
 import re
+import copy
 
 def create_joined_table(query_tables,query_table_fields,tables_data):
 
@@ -162,65 +163,7 @@ def get_aggregate(field,table,func,query_tables,table_dict,tables_data):
 	if func == 'average' or func == 'avg':
 		return sum_value/length
 
-'''
-def recalculate_aggregate(table,field_names,located_fields):
-	agg_indices = []
-	agg_fields = []
-	agg_funcs = []
-	fields_indices = []
-	fields = []
-	result = []
-	# finding indices where aggregate field occurs
-	for i,field in enumerate(field_names):
-		print(field)
-		if len(re.findall('\(',field)) == 0:
-			continue
-		agg_indices.append(i)
-		agg_fields.append(field)
-	print(agg_indices)
-	if len(agg_indices) == 0:
-		return field_names,table
-	
-	for index in agg_indices:
-		for field,info in located_fields.items():
-			if field != field_names[index]:
-				continue
-			column_name = info['table_name'] + '.' + info['field']
-			func = info['agg_func']
-			for i,result_field in enumerate(field_names):
-				if result_field != column_name:
-					continue
-				fields.append(column_name)
-				fields_indices.append(i)
-				agg_funcs.append(func)
-
-	result_fields = []
-	for i in agg_indices:
-		result_fields.append(field_names[i])
-		func = agg_funcs[i]
-		index = fields_indices[i]
-		sum_value = 0
-		min_value = table[0][index]
-		max_value = table[0][index]
-		for row in table:
-			val = row[index]
-			if val<min_value:
-				min_value = val
-			if val>max_value:
-				max_value = val
-			sum_value += val
-		if func == 'max':
-			agg_value = max_value	
-		if func == 'min':
-			agg_value = min_value	
-		if func == 'sum':
-			agg_value = sum_value	
-		if func == 'avg':
-			agg_value = sum_value / len(table)
-		result.append([agg_value])
-	return agg_fields,result	
-'''
-
+# calculating aggregate after where condition
 def cal_aggregate(fields,table,agg_fields):
 	if len(agg_fields) == 0:
 		return fields,table
@@ -257,3 +200,64 @@ def cal_aggregate(fields,table,agg_fields):
 			for i,row in enumerate(table):
 				table[i][field_index] = agg_value
 	return fields,table
+
+def get_joining_fields(query_conditions):
+	if len(query_conditions) == 0:
+		return []
+	
+	result = []
+
+	# if 1 condition : add 1, if 2:add both
+	if len(query_conditions) == 2:
+		conditions = [query_conditions[0]]
+	else:
+		conditions = query_conditions[0:2]
+	# going through each condition
+	for cond in conditions:
+		op1,op2 = cond[1],cond[2]
+		operation = cond[0]
+		if operation != 'equal':
+			continue
+		table1 = re.split('\.',op1)[0]
+		table2 = re.split('\.',op2)[0]
+		
+		# if belong to same table, they're not joining
+		if table1 == table2:
+			continue
+
+		result.append([op1,op2])
+
+	return result
+
+def remove_joining_fields(fields,table,joining_fields):
+	for joining_pair in joining_fields:
+		result = []
+		field1 = joining_pair[0]
+		field2 = joining_pair[1]
+		occur1 = False
+		occur2 = False
+
+		indices = []
+		for index,field in enumerate(fields):
+			if field == field1:
+				if occur2:
+					continue
+				occur1 = True
+			if field == field2:
+				if occur1:
+					continue
+				occur2 = True
+			indices.append(index)
+
+		for row in table:
+			r = []
+			for i in indices:
+				r.append(row[i])
+			result.append(r)
+		f = []
+		for i in indices:
+			f.append(fields[i])
+
+		fields = copy.deepcopy(f)
+		table = copy.deepcopy(result)
+	return table,fields
