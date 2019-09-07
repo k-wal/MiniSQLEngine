@@ -42,6 +42,7 @@ Only default python libraries are used
 + sys
 + csv
 + itertools
++ copy
 
 ### How to run
 Let query be : Q
